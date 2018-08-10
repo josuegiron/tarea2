@@ -2,45 +2,16 @@ package main
 
 import (
 	"bytes"
+	"encoding/xml"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"./structures"
 	"github.com/gorilla/mux"
-	"github.com/tiaguinho/gosoap"
 )
-
-func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/tipoCambio/tipoCambioDia", TipoCambioDia).Methods("POST")
-	log.Fatal(http.ListenAndServe(":3002", router))
-}
-
-func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
-
-	var miTipoCambioDiaResponse structures.TipoCambioDiaResponse
-
-	soap, err := gosoap.SoapClient("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?WSDL")
-	if err != nil {
-		fmt.Errorf("Error no definido: %s", err)
-	}
-
-	params := gosoap.Params{
-		"IPAddress": "8.8.8.8",
-	}
-
-	err = soap.Call("TipoCambioDia", params)
-	if err != nil {
-		fmt.Errorf("Error en la llamada SOAP: %s", err)
-	}
-
-	soap.Unmarshal(&miTipoCambioDiaResponse)
-
-	fmt.Println("TotalItems: ", miTipoCambioDiaResponse.TipoCambioDiaResult.TotalItems)
-	fmt.Println("Fecha: ", miTipoCambioDiaResponse.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha)
-	fmt.Println("Referencia: ", miTipoCambioDiaResponse.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia)
-}
 
 var request = []byte(`
 <?xml version="1.0" encoding="utf-8"?>
@@ -51,12 +22,58 @@ var request = []byte(`
 </soap:Envelope>
 `)
 
-func CallSoap(url string) {
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(request))
+func main() {
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/tipoCambio/tipoCambioDia", TipoCambioDia).Methods("POST")
+	log.Fatal(http.ListenAndServe(":3002", router))
+}
 
-	req.Header.Add("Content-Type", "text/xml;charset=UTF-8")
-	req.Header.Add("Accept", "text/xml")
-	req.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.URL, c.Method))
+func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
+
+	CallSoap("http://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia", request)
+
+}
+
+func CallSoap(url string, body []byte) {
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Printf("error 1: %v", err)
+	}
+	req.Header.Set("SOAPAction", "http://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia")
+	req.Header.Set("Content-Type", "text/xml")
+	req.Header.Set("charset", "utf-8")
+
+	var httpClient = &http.Client{Timeout: time.Second * 5}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Printf("error 2: %v", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+	}
+
+	var myMessage structures.Envelope
+
+	err2 := xml.Unmarshal([]byte(respBody), &myMessage)
+	if err2 != nil {
+		fmt.Printf("error 3: %v", err2)
+
+	}
+
+	var myMsg = myMessage.Body.TipoCambioDiaResponse
+	soapTotalItems := myMsg.TipoCambioDiaResult.TotalItems
+	//soapFecha := myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
+	//soapReferencia := myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
+
+	fmt.Println("TotalItems: ", soapTotalItems)
+	//fmt.Println("Fecha: ", soapFecha)
+	//fmt.Println("Referencia: ", soapReferencia)
+
+}
+
+func ResponseSoap() {
 
 }
 

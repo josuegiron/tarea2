@@ -3,27 +3,20 @@ package structures
 import "encoding/xml"
 
 type Envelope struct {
-	XMLName struct{} `xml:"Envelope"`
-	Header  Header
-	Body    Body
+	XMLName xml.Name `xml:"http://schemas.xmlsoap.org/soap/envelope/ Envelope"`
+	Header  Header   `xml:"Header"`
+	Body    Body     `xml:"Body"`
 }
 
 type Header struct {
-	XMLName  struct{} `xml:"Header"`
-	Contents []byte   `xml:",innerxml"`
+	Header struct{}
 }
 
 type Body struct {
-	XMLName  struct{} `xml:"Body"`
-	Contents []byte   `xml:",innerxml"`
-}
-
-type TipoCambioDiaRequest struct {
-	XMLName xml.Name `xml:"http://www.banguat.gob.gt/variables/ws/ TipoCambioDia"`
+	TipoCambioDiaResponse TipoCambioDiaResponse `xml:"http://www.banguat.gob.gt/variables/ws/ TipoCambioDiaResponse"`
 }
 
 type TipoCambioDiaResponse struct {
-	XMLName             xml.Name            `xml:"http://www.banguat.gob.gt/variables/ws/ TipoCambioDiaResponse"`
 	TipoCambioDiaResult TipoCambioDiaResult `xml:"TipoCambioDiaResult"`
 }
 
@@ -37,6 +30,6 @@ type CambioDolar struct {
 }
 
 type VarDolar struct {
-	Fecha      string  `xml:"fecha"`
-	Referencia float64 `xml:"referencia"`
+	Fecha      string `xml:"fecha"`
+	Referencia string `xml:"referencia"`
 }
