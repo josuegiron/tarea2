@@ -2,6 +2,22 @@ package structures
 
 import "encoding/xml"
 
+type Envelope struct {
+	XMLName struct{} `xml:"Envelope"`
+	Header  Header
+	Body    Body
+}
+
+type Header struct {
+	XMLName  struct{} `xml:"Header"`
+	Contents []byte   `xml:",innerxml"`
+}
+
+type Body struct {
+	XMLName  struct{} `xml:"Body"`
+	Contents []byte   `xml:",innerxml"`
+}
+
 type TipoCambioDiaRequest struct {
 	XMLName xml.Name `xml:"http://www.banguat.gob.gt/variables/ws/ TipoCambioDia"`
 }
