@@ -2,20 +2,19 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
 	"./structures"
 	"github.com/gorilla/mux"
 )
 
-var request = []byte(`
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+var request = []byte(`<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <TipoCambioDia xmlns="http://www.banguat.gob.gt/variables/ws/" />
   </soap:Body>
@@ -23,28 +22,38 @@ var request = []byte(`
 `)
 
 func main() {
+
+	//	4.1) API REST
+
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/tipoCambio/tipoCambioDia", TipoCambioDia).Methods("POST")
+	router.HandleFunc("/tipoCambio/tipoCambioDia", TipoCambioDia).Methods("GET")
 	log.Fatal(http.ListenAndServe(":3002", router))
 }
 
 func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
 
-	CallSoap("http://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia", request)
+	myMsg := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx", request)
 
+	//	4.2) RESPONDER EN JSON
+
+	json.NewEncoder(w).Encode(myMsg)
 }
 
-func CallSoap(url string, body []byte) {
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+func CallSoapXML(url string, body []byte) structures.TipoCambioDiaResponse {
+
+	//	2) CONSUMIENDO EL SERVICIO
+
+	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		fmt.Printf("error 1: %v", err)
 	}
-	req.Header.Set("SOAPAction", "http://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia")
-	req.Header.Set("Content-Type", "text/xml")
-	req.Header.Set("charset", "utf-8")
 
-	var httpClient = &http.Client{Timeout: time.Second * 5}
-	resp, err := httpClient.Do(req)
+	req.Header.Set("Content-Type", "text/xml; charset=utf-8")
+	req.Header.Set("SOAPAction", "http://www.banguat.gob.gt/variables/ws/TipoCambioDia")
+
+	client := http.Client{}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("error 2: %v", err)
 	}
@@ -56,29 +65,12 @@ func CallSoap(url string, body []byte) {
 
 	var myMessage structures.Envelope
 
+	//	3) TRANSFORMAR EL XML A STRING Y A ESTRUCTURA
+
 	err2 := xml.Unmarshal([]byte(respBody), &myMessage)
 	if err2 != nil {
 		fmt.Printf("error 3: %v", err2)
-
 	}
 
-	var myMsg = myMessage.Body.TipoCambioDiaResponse
-	soapTotalItems := myMsg.TipoCambioDiaResult.TotalItems
-	//soapFecha := myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
-	//soapReferencia := myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
-
-	fmt.Println("TotalItems: ", soapTotalItems)
-	//fmt.Println("Fecha: ", soapFecha)
-	//fmt.Println("Referencia: ", soapReferencia)
-
+	return myMessage.Body.TipoCambioDiaResponse
 }
-
-func ResponseSoap() {
-
-}
-
-//	docker build -t josuegiron/api-suma-go .
-//	docker run -p 3001:3001 josuegiron/api-suma-go
-//	docker tag josuegiron/api-suma-go josuegiron/api-suma-go:version1
-//  docker push josuegiron/api-suma-go:version1
-//	docker stack deploy -c docker-compose.yml api-suma-go-balanceada
