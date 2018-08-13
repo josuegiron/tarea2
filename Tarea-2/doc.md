@@ -1,10 +1,9 @@
 **Servicio suma**
 ---
-Este servicio realiza la operacion matemática suma.
-
+Este servicio devuelve el cambio de dolar actual
 * **URI**
 
-   	<http://10.1.1.33:3000/operacion/suma>
+   	<http://10.1.1.33:3002/tipoCambio/tipoCambioDia>
 
 * **Metodo:**
   
@@ -15,12 +14,7 @@ Este servicio realiza la operacion matemática suma.
 
 	**Requerido:**
  
-	* `sumandoA = [float]`
-	* `sumandoB = [float]`
-
- 	**Opcional:**
- 	
- 			Ninguno
+	* Ninguno
   	
 * **Parámetros de datos**
 
@@ -28,29 +22,41 @@ Este servicio realiza la operacion matemática suma.
   
 * **Respuesta exitosa:**
   
-	 La respuesta devuelve el total de la suma en formato JSON
+	 Entrega el tipo de cambio del dolar en formato JSON
 
   * **Codigo:** 200 OK<br />
     **Contenido:** 
     ```json
-    { "total" : 5.1 }
+    {
+    "TipoCambioDiaResult": {
+        "CambioDolar": {
+            "VarDolar": [
+                {
+                    "Fecha": "13/08/2018",
+                    "Referencia": "7.48156"
+                }
+            ]
+        },
+        "TotalItems": 1
+    }
+    }
     ```
  
 * **Respuesta de error:**
 
-  	Si no se ingresa ningún parámetro o un numero `float`
+  	No pudo obtener el valor del dolar actual.
 
-  * **Codigo:** 400 BAD REQUEST <br />
+  * **Codigo:** 404 NOT FOUND <br />
     **Contenido:** 
     ```json
-    { "error" : "No se ingreso un numero como sumando…" }
+    { "error" : "No se pudo obtener el valor actual del dolar..." }
     ```
 
  * **Llamada simple:**
 
   ```javascript
     $.ajax({
-      url: "http://10.1.1.33:3000/operacion/suma?sumandoA=2.0&sumandoB=3.1",
+      url: "http://10.1.1.33:3002/tipoCambio/tipoCambioDia",
       dataType: "json",
       type : "GET",
       success : function(r) {

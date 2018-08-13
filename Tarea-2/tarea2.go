@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -32,20 +31,27 @@ func main() {
 
 func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
 
-	myMsg := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx", request)
+	myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx", request)
+	if err != nil {
+		stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
+		json.NewEncoder(w).Encode(stringErr)
+	} else {
+		json.NewEncoder(w).Encode(myMsg)
+	}
 
 	//	4.2) RESPONDER EN JSON
 
-	json.NewEncoder(w).Encode(myMsg)
 }
 
-func CallSoapXML(url string, body []byte) structures.TipoCambioDiaResponse {
+func CallSoapXML(url string, body []byte) (tcr structures.TipoCambioDiaResponse, err error) {
+
+	var myMessage structures.Envelope
 
 	//	2) CONSUMIENDO EL SERVICIO
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
-		fmt.Printf("error 1: %v", err)
+		return tcr, err
 	}
 
 	req.Header.Set("Content-Type", "text/xml; charset=utf-8")
@@ -55,22 +61,21 @@ func CallSoapXML(url string, body []byte) structures.TipoCambioDiaResponse {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("error 2: %v", err)
+		return tcr, err
 	}
 	defer resp.Body.Close()
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		return tcr, err
 	}
-
-	var myMessage structures.Envelope
 
 	//	3) TRANSFORMAR EL XML A STRING Y A ESTRUCTURA
 
 	err2 := xml.Unmarshal([]byte(respBody), &myMessage)
 	if err2 != nil {
-		fmt.Printf("error 3: %v", err2)
+		return tcr, err2
 	}
 
-	return myMessage.Body.TipoCambioDiaResponse
+	return myMessage.Body.TipoCambioDiaResponse, err
 }
