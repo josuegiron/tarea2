@@ -14,7 +14,7 @@ Este servicio devuelve el cambio de dolar actual
 
 	**Requerido:**
  
-	* Ninguno
+  			Ninguno
   	
 * **Parámetros de datos**
 
@@ -22,23 +22,14 @@ Este servicio devuelve el cambio de dolar actual
   
 * **Respuesta exitosa:**
   
-	 Entrega el tipo de cambio del dolar en formato JSON
+	 Entrega el tipo de cambio del dolar y la fecha en formato JSON
 
   * **Codigo:** 200 OK<br />
     **Contenido:** 
     ```json
     {
-    "TipoCambioDiaResult": {
-        "CambioDolar": {
-            "VarDolar": [
-                {
-                    "Fecha": "13/08/2018",
-                    "Referencia": "7.48156"
-                }
-            ]
-        },
-        "TotalItems": 1
-    }
+        "Fecha": "13/08/2018",
+        "Referencia": "7.48156"
     }
     ```
  

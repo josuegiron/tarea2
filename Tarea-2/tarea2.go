@@ -36,7 +36,7 @@ func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
 		stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
 		json.NewEncoder(w).Encode(stringErr)
 	} else {
-		json.NewEncoder(w).Encode(myMsg)
+		json.NewEncoder(w).Encode(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0])
 	}
 
 	//	4.2) RESPONDER EN JSON
