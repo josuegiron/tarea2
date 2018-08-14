@@ -3,10 +3,9 @@
 Este servicio devuelve el cambio de dolar actual
 ### URI
 
-<http://10.1.1.33:3002/tipoCambio/tipoCambioDia>
+  <http://10.1.1.33:3002/tipoCambio/tipoCambioDia>
      
 ### Metodo:
-  
 
  	 `GET`
     
@@ -41,7 +40,9 @@ Este servicio devuelve el cambio de dolar actual
       404 NOT FOUND
 #### Contenido
   ```json
-  { "error" : "No se pudo obtener el valor actual del dolar..." }
+  { 
+    "error" : "No se pudo obtener el valor actual del dolar..." 
+  }
   ```
 
  ### Llamada simple:
