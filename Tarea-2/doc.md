@@ -12,11 +12,11 @@ Este servicio devuelve el cambio de dolar actual
     
 ### Parametros de la URI
 
-	**Requerido:**
+#### Requerido:
  
   			Ninguno
   	
-### Parámetros de datos
+#### Parámetros de datos:
 
   			Ninguno
   
@@ -37,8 +37,8 @@ Este servicio devuelve el cambio de dolar actual
 
   	No pudo obtener el valor del dolar actual.
 
-  * **Codigo:** 404 NOT FOUND <br />
-    **Contenido:** 
+   **Codigo:** 404 NOT FOUND <br />
+   **Contenido:** 
     ```json
     { "error" : "No se pudo obtener el valor actual del dolar..." }
     ```
