@@ -9,11 +9,12 @@ type Envelope struct {
 }
 
 type Header struct {
-	Header struct{}
+	Header interface{} `xml:",any"`
 }
 
 type Body struct {
-	TipoCambioDiaResponse TipoCambioDiaResponse `xml:"http://www.banguat.gob.gt/variables/ws/ TipoCambioDiaResponse"`
+	Content interface{} `xml:",any"`
+	// TipoCambioDiaResponse TipoCambioDiaResponse `xml:"http://www.banguat.gob.gt/variables/ws/ TipoCambioDiaResponse"`
 }
 
 type TipoCambioDiaResponse struct {
@@ -23,6 +24,10 @@ type TipoCambioDiaResponse struct {
 type TipoCambioDiaResult struct {
 	CambioDolar CambioDolar `xml:"CambioDolar"`
 	TotalItems  int         `xml:"TotalItems"`
+}
+
+type TipoCambioDiaRequest struct {
+	XMLName xml.Name `xml:"TipoCambioDiaRequest"`
 }
 
 type CambioDolar struct {

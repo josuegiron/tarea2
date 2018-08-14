@@ -1,26 +1,26 @@
-**Servicio suma**
----
+# Servicio suma
+
 Este servicio devuelve el cambio de dolar actual
-* **URI**
+### URI
 
    	<http://10.1.1.33:3002/tipoCambio/tipoCambioDia>
 
-* **Metodo:**
+### Metodo:
   
 
  	 `GET`
     
-*  **Parametros de la URI**
+### Parametros de la URI
 
 	**Requerido:**
  
   			Ninguno
   	
-* **Parámetros de datos**
+### Parámetros de datos
 
   			Ninguno
   
-* **Respuesta exitosa:**
+### Respuesta exitosa:
   
 	 Entrega el tipo de cambio del dolar y la fecha en formato JSON
 
@@ -33,7 +33,7 @@ Este servicio devuelve el cambio de dolar actual
     }
     ```
  
-* **Respuesta de error:**
+### Respuesta de error:
 
   	No pudo obtener el valor del dolar actual.
 
@@ -43,7 +43,7 @@ Este servicio devuelve el cambio de dolar actual
     { "error" : "No se pudo obtener el valor actual del dolar..." }
     ```
 
- * **Llamada simple:**
+ ### Llamada simple:
 
   ```javascript
     $.ajax({
@@ -55,6 +55,6 @@ Este servicio devuelve el cambio de dolar actual
       }
     });
   ```
-* **Nota:**
+#### Nota:
 
 	 Para realizar un test puede utilizar la herramienta [**Postman**](https://www.getpostman.com/).
