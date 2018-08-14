@@ -24,8 +24,8 @@ Este servicio devuelve el cambio de dolar actual
   
 	 Entrega el tipo de cambio del dolar y la fecha en formato JSON
 
-  * **Codigo:** 200 OK<br />
-    **Contenido:** 
+  *  **Codigo:** 200 OK
+  *  **Contenido:** 
     ```json
     {
         "Fecha": "13/08/2018",
@@ -37,8 +37,8 @@ Este servicio devuelve el cambio de dolar actual
 
   	No pudo obtener el valor del dolar actual.
 
-   **Codigo:** 404 NOT FOUND <br />
-   **Contenido:** 
+  * **Codigo:** 404 NOT FOUND <br />
+  * **Contenido:** 
     ```json
     { "error" : "No se pudo obtener el valor actual del dolar..." }
     ```
