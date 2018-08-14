@@ -21,8 +21,7 @@ Este servicio devuelve el cambio de dolar actual
   	Ninguno
   
 ### Respuesta exitosa:
-  
-	 Entrega el tipo de cambio del dolar y la fecha en formato JSON
+  Entrega el tipo de cambio del dolar y la fecha en formato JSON
 
   *  **Codigo:** 200 OK
   *  **Contenido:** 
@@ -35,7 +34,7 @@ Este servicio devuelve el cambio de dolar actual
  
 ### Respuesta de error:
 
-  	No pudo obtener el valor del dolar actual.
+  No pudo obtener el valor del dolar actual.
 
   * **Codigo:** 404 NOT FOUND <br />
   * **Contenido:** 
@@ -56,5 +55,4 @@ Este servicio devuelve el cambio de dolar actual
     });
   ```
 #### Nota:
-
-	 Para realizar un test puede utilizar la herramienta [**Postman**](https://www.getpostman.com/).
+  Para realizar un test puede utilizar la herramienta [**Postman**](https://www.getpostman.com/).
