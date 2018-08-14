@@ -3,8 +3,8 @@
 Este servicio devuelve el cambio de dolar actual
 ### URI
 
-   	<http://10.1.1.33:3002/tipoCambio/tipoCambioDia>
-
+<http://10.1.1.33:3002/tipoCambio/tipoCambioDia>
+     
 ### Metodo:
   
 
@@ -14,11 +14,11 @@ Este servicio devuelve el cambio de dolar actual
 
 #### Requerido:
  
-  			Ninguno
+  	Ninguno
   	
 #### Parámetros de datos:
 
-  			Ninguno
+  	Ninguno
   
 ### Respuesta exitosa:
   
@@ -26,12 +26,12 @@ Este servicio devuelve el cambio de dolar actual
 
   *  **Codigo:** 200 OK
   *  **Contenido:** 
-    ```json
-    {
-        "Fecha": "13/08/2018",
-        "Referencia": "7.48156"
-    }
-    ```
+      ```json
+      {
+          "Fecha": "13/08/2018",
+          "Referencia": "7.48156"
+      }
+      ```
  
 ### Respuesta de error:
 
