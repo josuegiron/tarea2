@@ -36,7 +36,7 @@ Este servicio devuelve el cambio de dolar actual
 
   No pudo obtener el valor del dolar actual.
 
-#### Codigo:
+#### Codigo
       404 NOT FOUND
 #### Contenido
   ```json
