@@ -28,11 +28,15 @@ func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
 	myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
 
 	//	4.2) RESPONDER EN JSON
+	
+	w.Header().Set("Content-Type", "application/json")
 
 	if err != nil {
 		stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(stringErr)
 	} else {
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0])
 	}
 }
