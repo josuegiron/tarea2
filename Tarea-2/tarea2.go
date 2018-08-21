@@ -23,23 +23,28 @@ func main() {
 }
 
 func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
-
-	//	1) SERVICIO
-
-	myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
-
-	//	4.2) RESPONDER EN JSON
-	
 	w.Header().Set("Content-Type", "application/json")
 
+	myFecha, myReferencia, err := GetCache()
 	if err != nil {
-		stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(stringErr)
-	} else {
+
+		myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
+		if err != nil {
+			stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(stringErr)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			SetCache(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha, myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia)
+			json.NewEncoder(w).Encode(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0])
+			log.Println("Solicita al Servidor")
+		}
+		
+	} else {	//	IMPLEMENTACION DEL CACHE
 		w.WriteHeader(http.StatusOK)
-		SetCache(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].fecha, myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].referencia)
-		json.NewEncoder(w).Encode(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0])
+		tipoCambioDia := map[string]string{"fecha" : myFecha, "referencia": myReferencia}
+		json.NewEncoder(w).Encode(tipoCambioDia)
+		log.Println("Solicita al Cache")
 	}
 }
 
@@ -95,27 +100,42 @@ func CallSoapXML(url string) (tcr structures.TipoCambioDiaResponse, err error) {
 
 
 func SetCache(fecha string, referencia string){
+
+	conn, err := redis.Dial("tcp", "localhost:6379")
+    if err != nil {
+        log.Fatal(err)
+    }
+	defer conn.Close()
+	
 	err = conn.Cmd("HMSET", "tipoCambioDia", "fecha", fecha, "referencia", referencia).Err
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = conn.Cmd("EXPIRE", "tipoCambioDia", "10").Err
+	err = conn.Cmd("EXPIRE", "tipoCambioDia", "60").Err
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func GetCache()(fecha string, referencia string )(
-	fecha, err := conn.Cmd("HGET", "tipoCambioDia", "fecha").Str()
+func GetCache() ( string,  string, error ){
+	conn, err := redis.Dial("tcp", "localhost:6379")
     if err != nil {
         log.Fatal(err)
+    }
+	defer conn.Close()
+	
+	fecha, err := conn.Cmd("HGET", "tipoCambioDia", "fecha").Str()
+    if err != nil {
+    	return "", "", err
 	}
 	referencia, err := conn.Cmd("HGET", "tipoCambioDia", "referencia").Str()
     if err != nil {
-        log.Fatal(err)
+        return "", "", err
 	}
-	return fecha, referencia
-)
+
+	return fecha, referencia, nil
+}
+	
 
 
 //	docker build -t josuegiron/api-suma-go .
