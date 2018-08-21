@@ -10,6 +10,7 @@ import (
 
 	"./structures"
 	"github.com/gorilla/mux"
+	"github.com/mediocregopher/radix.v2/redis"
 )
 
 func main() {
@@ -37,6 +38,7 @@ func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(stringErr)
 	} else {
 		w.WriteHeader(http.StatusOK)
+		SetCache(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].fecha, myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].referencia)
 		json.NewEncoder(w).Encode(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0])
 	}
 }
@@ -90,3 +92,34 @@ func CallSoapXML(url string) (tcr structures.TipoCambioDiaResponse, err error) {
 
 	return xmlResponse, err
 }
+
+
+func SetCache(fecha string, referencia string){
+	err = conn.Cmd("HMSET", "tipoCambioDia", "fecha", fecha, "referencia", referencia).Err
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = conn.Cmd("EXPIRE", "tipoCambioDia", "10").Err
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func GetCache()(fecha string, referencia string )(
+	fecha, err := conn.Cmd("HGET", "tipoCambioDia", "fecha").Str()
+    if err != nil {
+        log.Fatal(err)
+	}
+	referencia, err := conn.Cmd("HGET", "tipoCambioDia", "referencia").Str()
+    if err != nil {
+        log.Fatal(err)
+	}
+	return fecha, referencia
+)
+
+
+//	docker build -t josuegiron/api-suma-go .
+//	docker run -p 3001:3001 josuegiron/api-suma-go
+//	docker tag josuegiron/api-suma-go josuegiron/api-suma-go:version1
+//  docker push josuegiron/api-suma-go:version1
+//	docker stack deploy -c docker-compose.yml api-suma-go-balanceada
