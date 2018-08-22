@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strconv"
 	"./structures"
+	"sync"
+
 	"github.com/gorilla/mux"
 	"github.com/mediocregopher/radix.v2/redis"
 )
@@ -19,36 +21,56 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3002", router))
 }
 
+var myFecha string
+var myReferencia string
+
 func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Content-Type", "application/json")
 
+	
+	var err error
+
+	var wg sync.WaitGroup
+    var m sync.Mutex
+
 	//	OBTIENE EL CACHE
-	myFecha, myReferencia, err := GetCache()
-	if err != nil {
-		log.Println(err)
-		//	LLAMA AL SERVIDOR
+	myFecha, myReferencia, err = GetCache()
+	if err != nil{
+		go RequestServer(w, &wg, &m)
+		wg.Add(1) 
+	}
+	wg.Wait()
+	
+
+	tipoCambioDia := map[string]string{"Fecha" : myFecha, "Referencia": myReferencia}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(tipoCambioDia)
+}
+
+func RequestServer(w http.ResponseWriter, wg *sync.WaitGroup, m *sync.Mutex)  {
+	m.Lock()
+
 		myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
 		if err != nil {
+
 			stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(stringErr)
+
 		} else {
-			w.WriteHeader(http.StatusOK)
-			//	ALMACENA EL CACHE:
+
+			myFecha = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
+			myReferencia = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
+			SetCache(myFecha, myReferencia)
 			
-			json.NewEncoder(w).Encode(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0])
-			SetCache(myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha, myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia)
 			log.Println("Solicita al Servidor")
 		}
-		
-	} else {	
-		//	IMPLEMENTACION DEL CACHE
-		w.WriteHeader(http.StatusOK)
-		tipoCambioDia := map[string]string{"Fecha" : myFecha, "Referencia": myReferencia}
-		json.NewEncoder(w).Encode(tipoCambioDia)
-		//log.Println("Solicita al Cache")
-	}
+	
+	m.Unlock()
+	wg.Done() 
 }
+
 
 func CallSoapXML(url string) (tcr structures.TipoCambioDiaResponse, err error) {
 
@@ -110,7 +132,7 @@ func SetCache(fecha string, referencia string){
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = conn.Cmd("EXPIRE", "tipoCambioDia", "60").Err
+	err = conn.Cmd("EXPIRE", "tipoCambioDia", "10").Err
 	if err != nil {
 		log.Fatal(err)
 	}
