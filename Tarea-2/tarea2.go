@@ -23,48 +23,50 @@ func main() {
 
 var myFecha string
 var myReferencia string
-var err error
+var m sync.Mutex
 
 func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
 
-	
-
-	var wg sync.WaitGroup
-    var m sync.Mutex
-
-	//	OBTIENE EL CACHE
-	go RequestServer(w, &wg, &m)
-	wg.Add(1) 
-	wg.Wait()
-}
-
-func RequestServer(w http.ResponseWriter, wg *sync.WaitGroup, m *sync.Mutex)  {
 	w.Header().Set("Content-Type", "application/json")
+
+	
+	var err error
+
+    
+	m.Lock()
+	
+	
+	//	OBTIENE EL CACHE
 	myFecha, myReferencia, err = GetCache()
 	if err != nil{
-		m.Lock()
-		myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
-		if err != nil {
+		RequestServer(w, &m)
+	}	
 
-			stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(stringErr)
+	m.Unlock()
 
-		} else {
+	tipoCambioDia := map[string]string{"Fecha" : myFecha, "Referencia": myReferencia}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(tipoCambioDia)
+}
 
-			myFecha = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
-			myReferencia = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
-			SetCache(myFecha, myReferencia)
-			
-			log.Println("Solicita al Servidor")
-		}
-		m.Unlock()
-		wg.Done()
+func RequestServer(w http.ResponseWriter, m *sync.Mutex)  {
+
+
+	myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
+	if err != nil {
+
+		stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(stringErr)
+
+	} else {
+
+		myFecha = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
+		myReferencia = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
+		SetCache(myFecha, myReferencia)
+		
+		log.Println("Solicita al Servidor")
 	}
-		tipoCambioDia := map[string]string{"Fecha" : myFecha, "Referencia": myReferencia}
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(tipoCambioDia)
-
 }
 
 
@@ -128,7 +130,7 @@ func SetCache(fecha string, referencia string){
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = conn.Cmd("EXPIRE", "tipoCambioDia", "10").Err
+	err = conn.Cmd("EXPIRE", "tipoCambioDia", "60").Err
 	if err != nil {
 		log.Fatal(err)
 	}
