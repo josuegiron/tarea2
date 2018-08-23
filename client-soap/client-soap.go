@@ -34,7 +34,6 @@ func RequestServer()  {
 		var myFecha = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
 		var myReferencia = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
 		SetCache(myFecha, myReferencia)
-
 	}
 }
 
