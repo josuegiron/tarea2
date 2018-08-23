@@ -17,10 +17,10 @@ func main() {
 }
 
 func Execute() {
-	Here:
-	RequestServer()
-	time.Sleep(55 * time.Second)
-	goto Here
+	for{
+		RequestServer()
+		time.Sleep(55 * time.Second)
+	}
 }
 
 func RequestServer()  {
