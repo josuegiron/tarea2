@@ -23,34 +23,26 @@ func main() {
 
 var myFecha string
 var myReferencia string
+var err error
 
 func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Set("Content-Type", "application/json")
-
 	
-	var err error
 
 	var wg sync.WaitGroup
     var m sync.Mutex
 
 	//	OBTIENE EL CACHE
-	myFecha, myReferencia, err = GetCache()
-	if err != nil{
-		go RequestServer(w, &wg, &m)
-		wg.Add(1) 
-	}
+	go RequestServer(w, &wg, &m)
+	wg.Add(1) 
 	wg.Wait()
-	
-
-	tipoCambioDia := map[string]string{"Fecha" : myFecha, "Referencia": myReferencia}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(tipoCambioDia)
 }
 
 func RequestServer(w http.ResponseWriter, wg *sync.WaitGroup, m *sync.Mutex)  {
-	m.Lock()
-
+	w.Header().Set("Content-Type", "application/json")
+	myFecha, myReferencia, err = GetCache()
+	if err != nil{
+		m.Lock()
 		myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
 		if err != nil {
 
@@ -66,9 +58,13 @@ func RequestServer(w http.ResponseWriter, wg *sync.WaitGroup, m *sync.Mutex)  {
 			
 			log.Println("Solicita al Servidor")
 		}
-	
-	m.Unlock()
-	wg.Done() 
+		m.Unlock()
+		wg.Done()
+	}
+		tipoCambioDia := map[string]string{"Fecha" : myFecha, "Referencia": myReferencia}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(tipoCambioDia)
+
 }
 
 
@@ -136,6 +132,7 @@ func SetCache(fecha string, referencia string){
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("GUARDA CACHE")
 }
 
 func GetCache() ( string,  string, error ){
@@ -153,7 +150,7 @@ func GetCache() ( string,  string, error ){
     if err != nil {
         return "", "", err
 	}
-
+	log.Println("Cache")
 	return fecha, referencia, nil
 }
 	
