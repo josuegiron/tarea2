@@ -2,70 +2,39 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"encoding/xml"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"./structures"
-	"sync"
+	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/mediocregopher/radix.v2/redis"
 )
 
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/tipoCambio/tipoCambioDia", TipoCambioDia).Methods("GET")
-	log.Fatal(http.ListenAndServe(":3002", router))
+	Execute()
 }
 
-var myFecha string
-var myReferencia string
-var m sync.Mutex
-
-func TipoCambioDia(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json")
-
-	
-	var err error
-
-    
-	m.Lock()
-	
-	
-	//	OBTIENE EL CACHE
-	myFecha, myReferencia, err = GetCache()
-	if err != nil{
-		RequestServer(w, &m)
-	}	
-
-	m.Unlock()
-
-	tipoCambioDia := map[string]string{"Fecha" : myFecha, "Referencia": myReferencia}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(tipoCambioDia)
+func Execute() {
+	Here:
+	RequestServer()
+	time.Sleep(55 * time.Second)
+	goto Here
 }
 
-func RequestServer(w http.ResponseWriter, m *sync.Mutex)  {
+func RequestServer()  {
 
-
-	myMsg, err := CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
+	myMsg, err :=  CallSoapXML("https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx")
+	log.Println("Solicita al SOAP WS")
 	if err != nil {
-
-		stringErr := map[string]string{"error": "No se pudo obtener el valor actual del dolar..."}
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(stringErr)
-
+		log.Println("Error al solicitar al Soap Web Service...")
 	} else {
 
-		myFecha = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
-		myReferencia = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
+		var myFecha = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Fecha
+		var myReferencia = myMsg.TipoCambioDiaResult.CambioDolar.VarDolar[0].Referencia
 		SetCache(myFecha, myReferencia)
-		
-		log.Println("Solicita al Servidor")
+
 	}
 }
 
@@ -100,7 +69,6 @@ func CallSoapXML(url string) (tcr structures.TipoCambioDiaResponse, err error) {
 	}
 
 	//	TRANSFORMAR EL XML A STRING Y A ESTRUCTURA
-
 	var xmlResponse structures.TipoCambioDiaResponse
 	myMessage := structures.Envelope{
 		Body: structures.Body{
@@ -117,7 +85,6 @@ func CallSoapXML(url string) (tcr structures.TipoCambioDiaResponse, err error) {
 }
 
 //	FUNCIONES HACIA REDIS:
-
 func SetCache(fecha string, referencia string){
 
 	conn, err := redis.Dial("tcp", "localhost:6379")
@@ -134,42 +101,9 @@ func SetCache(fecha string, referencia string){
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("GUARDA CACHE")
-}
-
-func GetCache() ( string,  string, error ){
-	conn, err := redis.Dial("tcp", "localhost:6379")
-    if err != nil {
-        log.Fatal(err)
-    }
-	defer conn.Close()
-	
-	fecha, err := conn.Cmd("HGET", "tipoCambioDia", "fecha").Str()
-    if err != nil {
-    	return "", "", err
-	}
-	referencia, err := conn.Cmd("HGET", "tipoCambioDia", "referencia").Str()
-    if err != nil {
-        return "", "", err
-	}
-	log.Println("Cache")
-	return fecha, referencia, nil
+	log.Println("Actualiza el cache en redis...")
 }
 	
-func GetExpireTime()(int64, error){
-	conn, err := redis.Dial("tcp", "localhost:6379")
-    if err != nil {
-        log.Fatal(err)
-    }
-	defer conn.Close()
-	
-	time, err := conn.Cmd("TTL", "tipoCambioDia").Str()
-    if err != nil {
-    	return 0, err
-	}else{
-		return strconv.ParseInt(time, 10, 32)
-	}
-}
 
 //	docker build -t josuegiron/api-suma-go .
 //	docker run -p 3001:3001 josuegiron/api-suma-go
