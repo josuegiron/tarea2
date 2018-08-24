@@ -3,7 +3,7 @@
 Este servicio devuelve el cambio de dolar actual
 ### URI
 
-  <http://10.1.1.33:3002/tipoCambio/tipoCambioDia>
+  <http://localhost:3002/tipoCambio/tipoCambioDia>
      
 ### Metodo:
 
